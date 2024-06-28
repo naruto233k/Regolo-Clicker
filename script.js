@@ -3,12 +3,16 @@ let clickPower = 1;
 let clickCost = 10;
 let autoClickerCost = 100;
 let autoClickerActive = false;
+let startTime = null;
+let inventory = [];
 
 const scoreDisplay = document.getElementById('score');
+const timePlayedDisplay = document.getElementById('time-played');
 const clickButton = document.getElementById('click-button');
 const upgradeClickButton = document.getElementById('upgrade-click');
 const autoClickerButton = document.getElementById('auto-clicker');
 const achievementsList = document.getElementById('achievements-list');
+const inventoryList = document.getElementById('inventory-list');
 const clickSound = document.getElementById('click-sound');
 
 const achievements = [
@@ -17,19 +21,19 @@ const achievements = [
     { id: 'achievement-1000', text: 'Reach 1000 points', target: 1000, unlocked: false }
 ];
 
-clickButton.addEventListener('click', () => {
+clickButton.addEventListener('click', (event) => {
     score += clickPower;
     updateScore();
     playClickSound();
     checkAchievements();
-    showFloatingScore("+1");
+    showFloatingScore("+1", event.clientX, event.clientY);
 });
 
 upgradeClickButton.addEventListener('click', () => {
     if (score >= clickCost) {
         score -= clickCost;
         clickPower++;
-        clickCost *= 2;
+        clickCost = Math.ceil(clickCost * 1.5);
         updateScore();
     }
 });
@@ -104,17 +108,47 @@ function playClickSound() {
     clickSound.play();
 }
 
-function showFloatingScore(text) {
+function showFloatingScore(text, mouseX, mouseY) {
     const floatingText = document.createElement('span');
     floatingText.textContent = text;
     floatingText.className = 'floating-text';
     document.body.appendChild(floatingText);
 
-    const clickButtonRect = clickButton.getBoundingClientRect();
-    floatingText.style.left = `${clickButtonRect.left + clickButtonRect.width / 2}px`;
-    floatingText.style.top = `${clickButtonRect.top}px`;
+    floatingText.style.left = `${mouseX}px`;
+    floatingText.style.top = `${mouseY}px`;
 
     setTimeout(() => {
         floatingText.remove();
     }, 1000);
 }
+
+function updateTimePlayed() {
+    if (!startTime) {
+        startTime = Date.now();
+    }
+
+    setInterval(() => {
+        const currentTime = Date.now();
+        const timeDiff = currentTime - startTime;
+        const minutes = Math.floor((timeDiff / 1000 / 60) % 60);
+        const seconds = Math.floor((timeDiff / 1000) % 60);
+        const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        timePlayedDisplay.textContent = formattedTime;
+    }, 1000);
+}
+
+function addToInventory(item) {
+    inventory.push(item);
+    updateInventory();
+}
+
+function updateInventory() {
+    inventoryList.innerHTML = '';
+    inventory.forEach(item => {
+        const inventoryItem = document.createElement('li');
+        inventoryItem.textContent = item;
+        inventoryList.appendChild(inventoryItem);
+    });
+}
+
+updateTimePlayed();
